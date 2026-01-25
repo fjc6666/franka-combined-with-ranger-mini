@@ -1,0 +1,48 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # 控制频率 Hz
+
+    # 1. 关节状态广播器 (必须有，用于发布 /joint_states)
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # 2. Franka 机械臂控制器 (轨迹控制器)
+    franka_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    # 3. Ranger 底盘控制器 (这里暂时用差速控制器作为示例)
+    # 注意：如果你的 Ranger 是四轮转向，可能需要换成 omni_steering_controller
+    ranger_base_controller:
+      type: diff_drive_controller/DiffDriveController
+
+# -----------------------------------------------------------------------------
+# 机械臂详细配置
+# -----------------------------------------------------------------------------
+franka_arm_controller:
+  ros__parameters:
+    joints:
+      - fr3_joint1
+      - fr3_joint2
+      - fr3_joint3
+      - fr3_joint4
+      - fr3_joint5
+      - fr3_joint6
+      - fr3_joint7
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    state_publish_rate: 100.0
+    action_monitor_rate: 20.0
+
+# -----------------------------------------------------------------------------
+# 底盘详细配置 (假设的关节名称，建议先运行看是否报错)
+# -----------------------------------------------------------------------------
+ranger_base_controller:
+  ros__parameters:
+    left_wheel_names: ["front_left_wheel_joint", "rear_left_wheel_joint"]
+    right_wheel_names: ["front_right_wheel_joint", "rear_right_wheel_joint"]
+    wheel_separation: 0.46  # 轮距 (根据 urdf 里的 y 值估算)
+    wheel_radius: 0.08      # 轮半径 (根据 ranger mini 参数)
+    use_stamped_vel: false
