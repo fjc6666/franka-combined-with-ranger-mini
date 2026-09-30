@@ -3,10 +3,9 @@
 <p align="center"><strong>ROS 2 Humble · URDF/Xacro · Gazebo Classic · ros2_control</strong></p>
 <p align="center">A robot-description and simulation integration for mounting a Franka FR3 arm on an AgileX Ranger Mini V2 mobile base.</p>
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/b7a764ea-591e-4bab-aca3-7b24293f4b81" alt="Combined robot model view" width="48%" />
-  <img src="https://github.com/user-attachments/assets/6f1487f7-835e-4e68-b222-c4aecf01b3b9" alt="Combined robot simulation view" width="48%" />
-</p>
+![Franka FR3 arm mounted on Ranger Mini V2 in Gazebo](docs/images/franka-ranger-gazebo.png)
+
+*Gazebo Classic view captured after launching `display_sim.launch.py` with the repository's robot model and controllers.*
 
 > **Project boundary:** This repository focuses on robot assembly and Gazebo control setup. The later [MoveIt integration workspace](https://github.com/fjc6666/Combining-the-motion-planning-of-Franka-and-Ranger-Mini-without-servo) contains planning configuration. This repository includes upstream Franka/Ranger descriptions and controllers; the integration is the project-specific layer.
 
@@ -51,7 +50,7 @@ source install/setup.bash
 ros2 launch composite_robot_description display_sim.launch.py
 ```
 
-**Launch caveat:** display_sim.launch.py points RViz to config/config.rviz, but that file is absent from the checked-in composite_robot_description package. The model and Gazebo portion can be inspected; RViz may need to be started without that preset or given a saved local configuration. Hardware and clean-machine runtime were not validated in this documentation update.
+**RViz configuration:** `display_sim.launch.py` opens RViz, but its referenced `config/config.rviz` preset is absent from this repository. The Gazebo model and controllers launch; configure RViz displays manually or provide a saved RViz configuration.
 
 ## 中文简介
 
