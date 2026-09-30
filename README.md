@@ -1,117 +1,58 @@
-# Mobile Manipulator: Franka FR3 + AgileX Ranger Mini
+# Franka FR3 × Ranger Mini V2 | Composite Robot Model
 
-[![ROS 2 Version](https://img.shields.io/badge/ROS_2-Humble-blue.svg)](https://docs.ros.org/en/humble/)
-[![Simulation](https://img.shields.io/badge/Gazebo-Classic-orange.svg)](http://gazebosim.org/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
+<p align="center"><strong>ROS 2 Humble · URDF/Xacro · Gazebo Classic · ros2_control</strong></p>
+<p align="center">A robot-description and simulation integration for mounting a Franka FR3 arm on an AgileX Ranger Mini V2 mobile base.</p>
 
-A comprehensive ROS 2 URDF integration and simulation package for a composite mobile manipulator, featuring the **Franka Emika FR3** robotic arm mounted on an **AgileX Ranger Mini V2** omnidirectional mobile base.
-(![6f3591924e05bdeeb0e6ab4e0d67cba7](https://github.com/user-attachments/assets/b7a764ea-591e-4bab-aca3-7b24293f4b81)
-![0257d4e60ed0f091ece1c59fadb00e58](https://github.com/user-attachments/assets/6f1487f7-835e-4e68-b222-c4aecf01b3b9)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/b7a764ea-591e-4bab-aca3-7b24293f4b81" alt="Combined robot model view" width="48%" />
+  <img src="https://github.com/user-attachments/assets/6f1487f7-835e-4e68-b222-c4aecf01b3b9" alt="Combined robot simulation view" width="48%" />
+</p>
 
-This project was developed to solve common integration challenges such as inertia parameter loading, multi-hardware transmission conflicts, and correct physical mounting alignment in Gazebo simulations.
+> **Project boundary:** This repository focuses on robot assembly and Gazebo control setup. The later [MoveIt integration workspace](https://github.com/fjc6666/Combining-the-motion-planning-of-Franka-and-Ranger-Mini-without-servo) contains planning configuration. This repository includes upstream Franka/Ranger descriptions and controllers; the integration is the project-specific layer.
 
-![Mobile Manipulator Simulation](https://github.com/user-attachments/assets/placeholder-image-id)
-## 🚀 Key Features
+## What is implemented
 
-* **Composite URDF/Xacro**: Seamlessly merges the `ranger_mini_v2` base and `franka_fr3` arm descriptions into a single robot description.
-* **Physics-Ready Simulation**:
-    * Corrected mounting height to prevent chassis collision or floating.
-    * **Fixed Hand Inertia**: Solved the `argument of type 'bool' is not iterable` error by properly loading inertia parameters from YAML using `xacro.load_yaml`.
-    * **Functional Gripper**: Injected `ros2_control` interfaces for the Franka Hand fingers, enabling visualization in Rviz and control in Gazebo.
-* **Omnidirectional Control**: Supports holonomic movement (mecanum/crab steering) simulation.
-* **Modular Design**: Easy to extend for MoveIt 2 and Nav2 (Planned).
+| Part | Code to inspect |
+| --- | --- |
+| Composite URDF | [mobile_manipulator.urdf.xacro](composite_robot_description/urdf/mobile_manipulator.urdf.xacro) |
+| Gazebo launch | [display_sim.launch.py](composite_robot_description/launch/display_sim.launch.py) |
+| Controller configuration | [controllers.yaml](composite_robot_description/config/controllers.yaml) |
+| Ranger base description | [ranger_mini_v2_description](ranger_mini_v2_description) |
+| Franka arm description | [franka_description](franka_description) |
 
-## 📦 Prerequisites
+The Xacro combines the four wheel assemblies, FR3 arm, and Franka hand. It loads hand inertia data from YAML and declares finger joint control interfaces. The Gazebo launch parses the model, starts robot_state_publisher and Gazebo, spawns the robot, then starts the joint-state and arm controllers.
 
-This package is designed for **ROS 2 Humble Hawksbill** on Ubuntu 22.04.
+```mermaid
+flowchart LR
+    R[Ranger Mini Xacro] --> U[Composite URDF]
+    F[FR3 + hand Xacro] --> U
+    U --> G[Gazebo spawn]
+    G --> C[ros2_control]
+    U --> V[RViz robot view]
+```
 
-### Dependencies
-Ensure you have the standard ROS 2 simulation and control packages installed:
+## Build and inspect
+
+**Target environment:** Ubuntu 22.04, ROS 2 Humble, Gazebo Classic, Xacro, ros2_control, and colcon. Install Git LFS before cloning because the repository tracks large DAE meshes.
 
 ```bash
-sudo apt update
-sudo apt install ros-humble-gazebo-ros-pkgs \
-                 ros-humble-ros2-control \
-                 ros-humble-gazebo-ros2-control \
-                 ros-humble-joint-state-publisher-gui \
-                 ros-humble-xacro \
-                 ros-humble-teleop-twist-keyboard
+sudo apt install git-lfs python3-colcon-common-extensions python3-rosdep \
+  ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros2-control \
+  ros-humble-ros2-controllers ros-humble-xacro
+git lfs install
+mkdir -p ~/mobile_manipulator_ws/src
+cd ~/mobile_manipulator_ws/src
+git clone https://github.com/fjc6666/franka-combined-with-ranger-mini.git
+cd ~/mobile_manipulator_ws
+source /opt/ros/humble/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch composite_robot_description display_sim.launch.py
 ```
 
-## 🛠️ Installation
+**Launch caveat:** display_sim.launch.py points RViz to config/config.rviz, but that file is absent from the checked-in composite_robot_description package. The model and Gazebo portion can be inspected; RViz may need to be started without that preset or given a saved local configuration. Hardware and clean-machine runtime were not validated in this documentation update.
 
-1.  **Create a Workspace** (if you haven't already):
-    ```bash
-    mkdir -p ~/mobile_manipulation_ws/src
-    cd ~/mobile_manipulation_ws/src
-    ```
+## 中文简介
 
-2.  **Clone the Repository**:
-    ```bash
-    git clone [https://github.com/fjc6666/mobile_manipulation_project.git](https://github.com/fjc6666/mobile_manipulation_project.git) .
-    ```
-
-3.  **Install Dependencies**:
-    ```bash
-    cd ~/mobile_manipulation_ws
-    rosdep install --from-paths src --ignore-src -r -y
-    ```
-
-4.  **Build the Package**:
-    ```bash
-    colcon build --symlink-install
-    source install/setup.bash
-    ```
-
-## 💻 Usage
-
-### 1. Launch Simulation (Gazebo + Rviz)
-This launch file loads the robot into an empty Gazebo world and opens Rviz2 for state visualization.
-
-```bash
-ros2 launch composite_robot_description display_sim.launch.py verbose:=true
-```
-
-* **Note**: If Gazebo fails to launch or hangs, try disabling the model database download:
-    ```bash
-    export GAZEBO_MODEL_DATABASE_URI=""
-    ```
-
-### 2. Teleoperation (Drive the Base)
-To control the Ranger Mini base using your keyboard:
-
-```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard
-```
-
-* Use `i`, `j`, `k`, `l`, `,` to move.
-* The Ranger Mini supports omnidirectional movement (holonomic).
-
-## 🔧 Technical Details & Fixes
-
-### 1. Inertia Loading Fix
-Standard Franka descriptions often fail to load `inertials.yaml` when used as a sub-macro. This package implements a robust fix in `mobile_manipulator.urdf.xacro`:
-```xml
-<xacro:property name="hand_inertials" value="${xacro.load_yaml('$(find franka_description)/end_effectors/franka_hand/inertials.yaml')}"/>
-<xacro:franka_hand ... ee_inertials="${hand_inertials}"/>
-```
-
-### 2. Gripper Visualization
-By default, the Franka hand lacks `ros2_control` tags in simulation-only setups. We manually injected a `FrankaHandFakeSystem` interface to ensure joint states are published correctly.
-
-## 🗺️ Roadmap
-
-* [x] URDF Integration & Physical Simulation
-* [x] Base Control (cmd_vel)
-* [ ] **MoveIt 2 Integration**: Motion planning for the arm (In Progress).
-* [ ] **Nav2 Integration**: Autonomous navigation for the base.
-* [ ] **VR Teleoperation**: Interface for remote control using VR headsets (Graduation Project Goal).
-
-## 📝 License
-
-This project is licensed under the Apache 2.0 License.
-
----
-**Author**: fjc6666
-**Project**: Mobile Manipulation System Design (Graduation Project)
-And thank you to CharithDombawala for providing the description and configuration section for ranger_miniV2.
+本仓库解决 FR3 机械臂与 Ranger Mini V2 底盘的模型组合及 Gazebo 仿真接入，重点包括 Xacro 层级、安装位姿、手爪惯量与控制接口、控制器启动顺序。它属于**模型与仿真基础阶段**；MoveIt 运动规划配置在后续独立仓库。当前仓库的 RViz 预设文件缺失，使用时可能需要手动指定配置。
